@@ -1,25 +1,4 @@
-module type RING = 
-sig
-  type t
-  val zero : t
-  val one  : t
-  val add  : t -> t -> t
-  val mul  : t -> t -> t
-end
 
-
-module type MATRIX = 
-sig
-  type 'a matrix
-  val add : 'a matrix -> 'a matrix -> 'a matrix
-  val product : 'a matrix -> 'a matrix -> 'a matrix
-  val magnify : 'a -> 'a matrix -> 'a matrix
-  val identiry : int -> 'a matrix
-  val transpose : 'a matrix -> 'a matrix
-end
-
-module MATRIX = 
-struct 
   type 'a vector = 'a array
 
   type 'a matrix = 'a vector array
@@ -56,15 +35,23 @@ struct
       (fun i v -> let v' = Array.make n 0. in 
                   let _ = v'.(i) <- 1. in v') a
 
-  let rec create (n,m) lst = 
+  let rec create ((n:int),(m:int)) (lst:'a list) : 'a matrix = 
     let rec take n lst = 
       if n = 0 then [], lst
       else match lst with 
-          [] -> let took,remains = take (n-1) [] in 0::took, []
+          [] -> let took,remains = take (n-1) [] in 0.::took, []
         | h::t -> let took,remains = take (n-1) t in h::took, remains in
     let l,r = take n lst in 
     let v = Array.of_list l in
     if m = 0 then [||] else Array.append [|v|] (create (n,m-1) r)
-    
-end
 
+  let make (m:int) (n:int) (x:'a) : 'a matrix = Array.make_matrix m n x
+
+  let range m = (Array.length m, Array.length m.(0))
+
+  let (--) n m = 
+    let rec rrange m' lst = 
+      if m' < n 
+      then lst 
+      else (rrange (m' - 1) (m'::lst)) in
+    rrange m []
