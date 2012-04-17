@@ -11,7 +11,7 @@ let b = [| 0.; 0.; 0.; 30.; 24.; 36. |]
 
 let c = [| 3.; 1.; 2.; 0.; 0.; 0. |]
 
-let n1 = [ 1; 2; 3; ]
+let n1 = [ 0; 1; 2; ]
 
 let b1 = [3; 4; 5]
 
@@ -24,15 +24,15 @@ let pivot
     (c:float vector)
     (v:float) (l:int) (e:int) : 
     int list * int list * float matrix * float array * float array * float = 
-  let dim = (List.length nonbasic) + (List.length basic) in
-  let a' = make dim dim 0. in
-  let b' = Array.create dim 0. in
-  let c' = Array.create dim 0. in
+  let d = (List.length nonbasic) + (List.length basic) in
+  let a' = make d d 0. in
+  let b' = Array.create d 0. in
+  let c' = Array.create d 0. in
   let _ = 
     b'.(e) <- b.(l) /. a.(l).(e) ; 
     List.iter (fun j -> 
-      if j <> e then a.(e).(j) <- b.(l) /. a.(l).(e)) nonbasic ;
-    a.(e).(l) <- 1. /. a.(l).(e) ;
+      if j <> e then a'.(e).(j) <- a.(l).(j) /. a.(l).(e)) nonbasic ;
+    a'.(e).(l) <- 1. /. a.(l).(e) ;
     List.iter (fun i -> 
       if i <> l then b'.(i) <- b.(i) -. a.(i).(e) *. b'.(e) ; 
       List.iter (fun j -> 
@@ -44,8 +44,9 @@ let pivot
   let _ = List.iter (fun j ->
     c'.(j) <- c.(j) -. c.(e) *. a'.(e).(j)
   ) nonbasic ; c'.(l) <- -.c.(e) *. a'.(e).(l) in
-  let nonbasic' = l :: (List.filter ((=) e) nonbasic) in
-  let basic'    = e :: (List.filter ((=) l) basic) in
+  let nonbasic' = l :: (List.filter ((!=) e) nonbasic) in
+  let basic'    = e :: (List.filter ((!=) l) basic) in
   (nonbasic', basic', a', b', c', v')
 
 ;;
+pivot n1 b1 a b c 0. 5 0;;
