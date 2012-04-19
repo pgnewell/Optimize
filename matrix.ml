@@ -55,3 +55,21 @@
       then lst 
       else (rrange (m' - 1) (m'::lst)) in
     rrange m []
+
+  let lower_corner x b c = 
+    let m,n = range x in
+    let stubm = Array.make m 0. in
+    let stubn = Array.make n 0. in
+    let stubmn = Array.append stubm stubn in 
+    let b' = Array.append stubn b in
+    let c' = Array.append c stubm in
+    let rec makematrix m' n' = 
+      if m' > 0 
+      then Array.append [|stubmn|] (makematrix (m' - 1) n')
+      else let _ = Printf.printf "n n' = %d %d\n" n n' in
+        if n' > 0 
+        then (Array.append 
+          [|(Array.append x.(n - n') stubm)|] (makematrix m' (n' - 1)))
+        else [||] in
+    makematrix m n, b', c'
+
