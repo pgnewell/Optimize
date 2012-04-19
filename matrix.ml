@@ -1,3 +1,8 @@
+(* a module to deal with two dimensional matrices. not all functions are 
+ * actually used in the project 
+ * this probably won't ever work for 'a anything but float but I don't really
+ * need anything else here
+ *)
 
   type 'a vector = 'a array
 
@@ -47,8 +52,10 @@
 
   let make (m:int) (n:int) (x:'a) : 'a matrix = Array.make_matrix m n x
 
+(* return the dimensions of the matrix *)
   let range m = (Array.length m, Array.length m.(0))
 
+(* a useful range function (not necessarily used anywhere *)
   let (--) n m = 
     let rec rrange m' lst = 
       if m' < n 
@@ -56,6 +63,10 @@
       else (rrange (m' - 1) (m'::lst)) in
     rrange m []
 
+(* take arrays A b c (according to input) and make them usable by the algorithm
+ * this means making an m+n square martix and locating the original a in the
+ * lower left corner. The b and c arrays are augmented with zeroes and become
+ * m+n vectors *)
   let lower_corner x b c = 
     let m,n = range x in
     let stubm = Array.make m 0. in
@@ -66,7 +77,7 @@
     let rec makematrix m' n' = 
       if m' > 0 
       then Array.append [|stubmn|] (makematrix (m' - 1) n')
-      else let _ = Printf.printf "n n' = %d %d\n" n n' in
+      else 
         if n' > 0 
         then (Array.append 
           [|(Array.append x.(n - n') stubm)|] (makematrix m' (n' - 1)))

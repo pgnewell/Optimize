@@ -1,18 +1,15 @@
 open Matrix
+open Printf
 
-let a = create (3,3) [-1.; -1.; -3.; 
-                      -2.; -2.; -5.; 
-                      -4.; -1.; -2.; ]
+let pf = printf
 
-let b = [| 30.; 24.; 36. |]
+let print_f_array a = 
+  for i = 1 to Array.length a do
+    pf "%f " a.(i-1)
+  done;
+  pf "\n%!"
 
-let c = [| 3.; 1.; 2. |]
-
-let a,b,c = lower_corner a b c
-
-let n1 = [ 0; 1; 2; ]
-
-let b1 = [3; 4; 5]
+let pff = print_f_array
 
 let select m l f = 
   let (v,i) = List.fold_left (fun p i -> 
@@ -58,9 +55,6 @@ let pivot
   let basic'    = e :: (List.filter ((!=) l) basic) in
   (nonbasic', basic', a', b', c', v')
 
-;;
-let (n1', b1', a', b', c', v') = pivot n1 b1 a b c 0. 5 0;;
-
 let initialize_simplex (a:float matrix) (b:float vector) (c:float vector) :
     int list * (* N *)
     int list * (* B *)
@@ -73,12 +67,6 @@ let initialize_simplex (a:float matrix) (b:float vector) (c:float vector) :
   let nonbasic,basic = 0--(n-1),n--(n+m-1) in
   (nonbasic,basic,a',b',c',0.)
 
-(*
-  let simplex (a:float matrix) (b:float vector) (c:float vector) = 
-  let nonbasic, basic, a, b, c, v = initialize_simplex in
-  let x = Array.make n 0 in
-(x)
-*)
 let rec iterate_pivot (
     (nonbasic: int list),
     (basic: int list),
@@ -97,5 +85,28 @@ let rec iterate_pivot (
         if y < 0. then infinity else y) b in
       let (d,l) = select delta basic (<) in
       if d = infinity 
-      then raise (Failure "Program is unbounded")
+      then 
+        let _ = pff delta in let a' = transpose a in
+        let _ = pf "e = %d, a(e) = " e; pff a'.(e) in [],[||]
+      (* raise (Failure "Program is unbounded") *)
       else iterate_pivot (pivot nonbasic basic a b c v e l)
+;;
+
+(* *)
+  let simplex (a:float matrix) (b:float vector) (c:float vector) = 
+  let nonbasic, basic, a, b, c, v = initialize_simplex a b c in
+  let basic,x = iterate_pivot (nonbasic, basic, a, b, c, v) in
+(x)
+(* *)
+
+let a = create (3,3) [-1.; -1.; -3.; 
+                      -2.; -2.; -5.; 
+                      -4.; -1.; -2.; ]
+
+let b = [| 30.; 24.; 36. |]
+
+let c = [| 3.; 1.; 2. |]
+
+;;
+simplex a b c 
+;;

@@ -1,0 +1,6 @@
+There are three files simplex, matrix and optimize
+
+optimize will serve as the main program and the others as libraries.
+
+To run, create a file with the model which is a matrix:
+
