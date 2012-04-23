@@ -1,13 +1,15 @@
-LIB = matrix.ml
-EXE = simplex.ml
+LIB = matrix.ml reader.ml simplex.ml
+EXE = optimize.ml
 
 all: lib exe
 
 lib: $(LIB)
-	ocamlc -a matrix.ml -o matrix.cma
+	ocamlc -o matrix.cma -a matrix.ml
+	ocamlc -o reader.cma -a reader.ml
+	ocamlc -o simplex.cma -a simplex.ml
 
 exe: $(EXE)
-	ocamlc -o simplex matrix.cma simplex.ml
+	ocamlc str.cma matrix.cma reader.cma simplex.cma -o optimize optimize.ml
 
 clean:
-	rm -f *.cmi *.cmo *.cma simplex
+	rm -f *.cmi *.cmo *.cma optimize
