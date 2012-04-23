@@ -84,3 +84,11 @@
         else [||] in
     makematrix m n, b', c'
 
+  let print_matrix m = 
+    for i = 0 to (Array.length m) -1 do
+      Array.iter (Printf.printf "%f ") m.(i) ; print_newline ()
+    done
+
+
+        
+    
