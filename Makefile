@@ -11,6 +11,7 @@ lib: $(LIB)
 
 exe: $(EXE)
 	ocamlc str.cma matrix.cma simplex.cma instrument.cma reader.cma -o optimize optimize.ml
+	ocamlc str.cma matrix.cma instrument.cma -o simplex simplex.ml
 
 clean:
 	rm -f *.cmi *.cmo *.cma optimize

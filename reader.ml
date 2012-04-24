@@ -4,8 +4,8 @@
  *)
 
 (*let readf : float = Scanf.scan s "%f %n" (fun s' n -> *)
-open Instrument
-open Matrix
+open Instrument;;
+open Matrix;;
 
 let read_string_list (ch:in_channel) : string list option = 
   try Some (Str.split (Str.regexp_string " ") (input_line ch))

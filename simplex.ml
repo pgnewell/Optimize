@@ -1,4 +1,4 @@
-open Matrix
+open Matrix;;
 open Printf
 
 let pf = printf
@@ -10,15 +10,20 @@ let print_f_array a =
   pf "\n%!"
 
 let pff = print_f_array
-
+(* 
+ * select takes a vector m and a list of indices into that matrix, l
+ * and f, a function. Returns the f'est thing in the list along with its
+ * index into the vector (if f is (<) f'est is smallest)
+ *)
 let select m l f = 
   let (v,i) = List.fold_left (fun p i -> 
     let v',i' = p in if (f m.(i) v') then m.(i),i else p) 
     (m.(List.hd l),(List.hd l)) l in
   v,i
 
+(* run the pivot logic as in CLRS *)
 let pivot 
-    (* b and n must be a partition a list from 1..N *)
+    (* basic and nonbasic must be a partition a list from 1..N *)
     (nonbasic: int list)
     (basic: int list)
     (a: float matrix) 
@@ -93,15 +98,15 @@ let rec iterate_pivot (
 ;;
 
 (* *)
-  let simplex (a:float matrix) (b:float vector) (c:float vector) = 
+let simplex (a:float matrix) (b:float vector) (c:float vector) = 
   let nonbasic, basic, a, b, c, v = initialize_simplex a b c in
   let basic,x = iterate_pivot (nonbasic, basic, a, b, c, v) in
-(x)
+basic, x
 (* *)
 
-let a = create (3,3) [-1.; -1.; -3.; 
-                      -2.; -2.; -5.; 
-                      -4.; -1.; -2.; ]
+let a = create (3,3) [1.; 1.; 3.; 
+                      2.; 2.; 5.; 
+                      4.; 1.; 2.; ]
 
 let b = [| 30.; 24.; 36. |]
 

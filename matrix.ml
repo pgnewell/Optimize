@@ -40,6 +40,10 @@
       (fun i v -> let v' = Array.make n 0. in 
                   let _ = v'.(i) <- 1. in v') a
 
+(*
+ * Create a new matrix of dimension mxn and populate it with a list
+ * (hopefully of length mxn.
+ *)
   let rec create ((n:int),(m:int)) (lst:'a list) : 'a matrix = 
     let rec take n lst = 
       if n = 0 then [], lst
@@ -84,6 +88,7 @@
         else [||] in
     makematrix m n, b', c'
 
+(* for testing *)
   let print_matrix m = 
     for i = 0 to (Array.length m) -1 do
       Array.iter (Printf.printf "%f ") m.(i) ; print_newline ()
