@@ -4,33 +4,16 @@
  *)
 
 (*let readf : float = Scanf.scan s "%f %n" (fun s' n -> *)
+open Instrument;;
+open Matrix;;
 
-let fos = float_of_string
-
-let ios = int_of_string
-
-let split = Str.split (Str.regexp_string " ")
-
-let rec read vs is ch =
-  match try Some(split (input_line ch)) with _ -> None with
-  | None -> vs, is
-  | Some[x;y;z;_;_] -> read ((fos x, fos y, fos z) :: vs) is ch
-  | Some["3";i;j;k] -> read vs ((ios i, ios j, ios k) :: is) ch
-  | Some s -> read vs is ch
-
-let vertices, indices =
-  let ch = open_in "model.txt" in
-  let vs, is = read [] [] ch in
-  close_in ch;
-  Printf.printf "%d vertices, %d triangles\n%!"
-    (List.length vs) (List.length is);
-  Array.of_list (List.rev vs), is
+let read_string_list (ch:in_channel) : string list option = 
+  try Some (Str.split (Str.regexp_string " ") (input_line ch))
+  with _ -> None
 
 let read_matrix (ch:in_channel) : (float Matrix.matrix) * Matrix.dim = 
   let rec read_numbers cols = 
-    match 
-      try Some (Str.split (Str.regexp_string " ") (input_line ch))
-      with _ -> None with 
+    match read_string_list ch with 
           None -> [||],(0,0)
         | Some [] -> [||],(0,0)
         | Some (h::t) -> 
@@ -47,4 +30,18 @@ let read_matrix (ch:in_channel) : (float Matrix.matrix) * Matrix.dim =
   in
   read_numbers None
 
+let rec read_model ch : i
+	instrument list * float matrix * float vector  = 
+  match read_string_list with 
+      None -> [],[||],[||]
+    | "Instrument"::name -> 
+      let instr = read_instrument ch name in
+      let il,model,obj = read_model ch in instr::il,model,obj
+    | "Model"::_ -> 
+      let model,_ = read_matrix ch in 
+      let il,model',obj = read_model ch in il,model,obj
+    | "Objective"::_ ->
+      let m = read_matrix ch in
+      let obj = m.(0) in
+      let il,model,obj' = read_model ch in il,model,obj
 
