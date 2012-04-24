@@ -1,0 +1,20 @@
+Instrument: MSFT
+-RoR 3.5
+-Risk 40
+-Beta 20
+
+Instrument: AGE
+-RoR 4.1
+-Risk 60
+-Beta 20
+
+Instrument: AAP
+-RoR 12.0
+-Risk 60
+-Beta 50
+
+Model:
+-1. -1. -3.
+-2. -2. -5. 
+-4. -1. -2.
+
