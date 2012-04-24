@@ -4,8 +4,8 @@
  *)
 
 (*let readf : float = Scanf.scan s "%f %n" (fun s' n -> *)
-open Instrument;;
-open Matrix;;
+open Instrument
+open Matrix
 
 let read_string_list (ch:in_channel) : string list option = 
   try Some (Str.split (Str.regexp_string " ") (input_line ch))
@@ -30,18 +30,18 @@ let read_matrix (ch:in_channel) : (float Matrix.matrix) * Matrix.dim =
   in
   read_numbers None
 
-let rec read_model ch : 
-	instrument list * float matrix * float vector  = 
+let rec read_model ch : Instrument.t list * float matrix * float vector  = 
   match read_string_list ch with 
-      None -> [],[||],[||]
-    | Some("Instrument"::name) -> 
-      let instr = read_instrument ch (List.hd name) in
+      None | Some [] -> [],[||],[||]
+    | Some("Instrument:"::name) -> 
+      let instr = Instrument.read ch (List.hd name) in
       let il,model,obj = read_model ch in instr::il,model,obj
-    | Some("Model"::_) -> 
+    | Some("Model:"::_) -> 
       let model,_ = read_matrix ch in 
       let il,model',obj = read_model ch in il,model,obj
-    | Some("Objective"::_) ->
+    | Some("Objective:"::_) ->
       let m,_ = read_matrix ch in
       let obj = m.(0) in
       let il,model,obj' = read_model ch in il,model,obj
+    | Some (s::l) -> raise (Failure ("bad format" ^ s))
 

@@ -1,12 +1,12 @@
 open Reader;;
 open Matrix;;
 open Simplex;;
+open Instrument;;
 
 let ch = open_in "model.txt" in
-let l = read_string_list ch in
-let nm = List.nth 1 l in
-let m,_ = read_instrument nm in
-Matrix.print_ma
+let instl,m,o = read_model ch in
+List.iter (Instrument.print) instl ;
+print_matrix m ;
 close_in ch
 
 
