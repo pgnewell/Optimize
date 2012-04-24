@@ -30,18 +30,18 @@ let read_matrix (ch:in_channel) : (float Matrix.matrix) * Matrix.dim =
   in
   read_numbers None
 
-let rec read_model ch : i
+let rec read_model ch : 
 	instrument list * float matrix * float vector  = 
-  match read_string_list with 
+  match read_string_list ch with 
       None -> [],[||],[||]
-    | "Instrument"::name -> 
-      let instr = read_instrument ch name in
+    | Some("Instrument"::name) -> 
+      let instr = read_instrument ch (List.hd name) in
       let il,model,obj = read_model ch in instr::il,model,obj
-    | "Model"::_ -> 
+    | Some("Model"::_) -> 
       let model,_ = read_matrix ch in 
       let il,model',obj = read_model ch in il,model,obj
-    | "Objective"::_ ->
-      let m = read_matrix ch in
+    | Some("Objective"::_) ->
+      let m,_ = read_matrix ch in
       let obj = m.(0) in
       let il,model,obj' = read_model ch in il,model,obj
 
