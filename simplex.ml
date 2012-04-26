@@ -72,22 +72,22 @@ let pivot
   let _N' = List.sort (compare) (l :: _N') in
   let _B' = List.sort (compare) (e :: _B') in
   let _ = c'.(l) <- (-. ( c.(e) *. _A'.(e).(l) )) in
-  ps "A\n" ; print_matrix _A' ;
+(*  ps "A\n" ; print_matrix _A' ;
   ps "b\n" ; plst _B' ;
-  ps "c\n" ; plst _N' ;
+  ps "c\n" ; plst _N' ; *)
   (_N', _B', _A', b', c', v')
 
-let initialize_simplex (a:float matrix) (b:float vector) (c:float vector) :
+let initialize_simplex (_A:float matrix) (b:float vector) (c:float vector) :
     int list * (* N *)
     int list * (* B *)
     float matrix * (* A *)
     float array * (* b *)
     float array * (* c *)
     float = (* v *)
-  let a',b',c' = lower_corner a b c in
-  let m,n = range a in
+  let _A',b',c' = lower_corner _A b c in
+  let m,n = dim _A in
   let _N,_B = 0--(n-1),n--(n+m-1) in
-  (_N,_B,a',b',c',0.)
+  (_N,_B,_A',b',c',0.)
 
 let rec iterate_pivot (
     (_N: int list),
@@ -122,33 +122,73 @@ let leaving _A _B b e =
   let delta = positize (divv b (transpose _A).(e)) in
   select delta _B (<)
 
+(* 
+ * According to the text any c(i) > 0 will do but the examples always use 
+ * the largest, so we do that here. None means you are done with the algorithm
+*)
+let entering _N c =
+  let _N' = List.filter (fun j ->  c.(j) > 0.) _N in
+  match _N' with [] -> None | _ ->
+    let c' = (extract [|c|] [0] _N).(0) in
+    let c'' = List.combine _N (Array.to_list c') in
+    let e,_ = List.fold_left 
+      (fun (x,y) (x',y') -> if y>y' then (x,y) else (x',y')) (-1,-1.) c'' in 
+    Some e
+                                                                          
+(* this is nonsense but it was a lot of work *)
+let rec tightest _N _A b c mo =
+  match _N with
+      [] -> mo
+    | h::t -> 
+      if c.(h) <= 0.
+      then tightest t _A b c mo
+      else let m = sumv (divv b (column h _A)) in
+           let mo' = match mo with
+               None -> Some m | Some m' -> Some (max m' m) in
+           tightest t _A b c mo'
+
 let rec iterate_pivot (_N,_B,_A,b,c,v) = 
-  match List.filter (fun j ->  c.(j) > 0.) _N with
-      [] -> Array.of_list (List.map (fun i -> b.(i)) _B)
-    | e::_ -> 
-      let v,l = leaving _A _B b e in
-      if v = infinity 
+  match entering _N c with
+      None -> b,v
+    | Some e -> 
+      let _v,l = leaving _A _B b e in
+      if _v = infinity 
       then raise (Failure "program is unbounded")
       else (
-        ps "N" ; plst _N ; pnl (); 
-        ps "B" ; plst _B ; pnl () ; 
-        print_matrix _A ; print_vector b ; print_vector c ;
+        ps "N : " ; plst _N ; pnl (); 
+        ps "B : " ; plst _B ; pnl () ; 
+        ps "A :\n" ; print_matrix _A ; pnl () ;
+        ps "b : " ; print_vector b ; pnl () ; 
+        ps "c : " ; print_vector c ; pnl () ;
+        pf "v %f l %d e %d\n" v l e ;
         iterate_pivot (pivot _N _B _A b c v l e))
 
 (* *)
-let simplex (a:float matrix) (b:float vector) (c:float vector) = 
-  let _N, _B, _A, b, c, v = initialize_simplex a b c in
-  let _x = iterate_pivot (_N, _B, _A, b, c, v) in _x
+let simplex (_A:float matrix) (b:float vector) (c:float vector) = 
+  let _N, _B, _A, b, c, v = initialize_simplex _A b c in
+  let b',v' = iterate_pivot (_N, _B, _A, b, c, v) in
+  (extract [|b'|] [0] _N).(0), v'
 (* *)
+
+;;
 
 let _A = create (3,3) [1.; 1.; 3.; 
                       2.; 2.; 5.; 
-                      4.; 1.; 2.; ]
+                      4.; 1.; 2.; ] in
 
-let b = [| 30.; 24.; 36. |]
+let b = [| 30.; 24.; 36. |] in
 
-let c = [| 3.; 1.; 2. |]
+let c = [| 3.; 1.; 2. |] in
 
+simplex _A b c 
 ;;
+let _A = create (3,3) [-1.; -1.; 1.; 
+                      1.; 1.; -1.; 
+                      -1.; 2.; -2.; ] in
+
+let b = [| 7.; -7.; 4. |] in
+
+let c = [| 2.; -3.; 3. |] in
+
 simplex _A b c 
 ;;

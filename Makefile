@@ -4,6 +4,7 @@ EXE = optimize.ml
 all: lib exe
 
 lib: $(LIB)
+	ocamlc -o lib.cma -a Helpers.ml matrix.ml instrument.ml reader.ml 
 	ocamlc -c Helpers.ml
 	ocamlc -c matrix.ml
 	ocamlc -c reader.ml

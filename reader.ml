@@ -11,7 +11,7 @@ let read_string_list (ch:in_channel) : string list option =
   try Some (Str.split (Str.regexp_string " ") (input_line ch))
   with _ -> None
 
-let read_matrix (ch:in_channel) : (float Matrix.matrix) * Matrix.dim = 
+let read_matrix (ch:in_channel) : (float Matrix.matrix) * (int * int) = 
   let rec read_numbers cols = 
     match read_string_list ch with 
           None -> [||],(0,0)
