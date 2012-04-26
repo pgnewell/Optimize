@@ -4,14 +4,18 @@ EXE = optimize.ml
 all: lib exe
 
 lib: $(LIB)
-	ocamlc -o matrix.cma -a matrix.ml
-	ocamlc -o reader.cma -a reader.ml
-	ocamlc -o simplex.cma -a simplex.ml
-	ocamlc -o instrument.cma -a instrument.ml
+	ocamlc -c Helpers.ml
+	ocamlc -c matrix.ml
+	ocamlc -c reader.ml
+	ocamlc -c simplex.ml
+	ocamlc -c instrument.ml
 
 exe: $(EXE)
-	ocamlc str.cma matrix.cma simplex.cma instrument.cma reader.cma -o optimize optimize.ml
-	ocamlc str.cma matrix.cma instrument.cma -o simplex simplex.ml
+	ocamlc -o optimize str.cma Helpers.ml matrix.ml simplex.ml instrument.ml reader.ml optimize.ml
+	ocamlc -o simplex str.cma Helpers.ml matrix.ml simplex.ml instrument.ml
+
+#	ocamlc str.cma matrix.cmo simplex.cmo instrument.cmo reader.cmo -o optimize optimize.ml
+#	ocamlc str.cma matrix.cmo instrument.cmo -o simplex simplex.ml
 
 clean:
 	rm -f *.cmi *.cmo *.cma optimize
