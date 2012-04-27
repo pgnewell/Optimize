@@ -3,11 +3,12 @@
  * variables used generally follow this pattern:
  *       _N - from CLRS N, the non-basic vector. Here it is a list
  *            of the indices to the large matrix that represent the
- *            x variables in the constaints (int list)
+ *             (int list)
  *       _B - the basic indices (int list)
  *       _A - the constraint matrix
  *       b  - the constraint vector
  *       c  - the objective vector (sum c(i)*x(i) = objective)
+ *            (coefficients to objective function)
  *       v  - the slack value
  *       e  - the entering value (int)
  *       l  - the leaving value (int)
@@ -22,11 +23,38 @@ let pnl = print_newline
 let pff a = Array.iter (pf "%f ") a ; pnl ()
 let plst a = List.iter (pf "%d ") a ; pnl ()
 
+type lp = (* A,b,c - as in CLRS *)
+    float matrix * float vector * float vector
+
+type slack_lp = (* N,B,A,b,c - as in CLRS *)
+    int list * int list * float matrix * float vector * float vector * float
+
+let init_slack (p:lp) = 
+  let (_A,b,c) = p in
+  let m,n = dim _A in
+  let _A' = magnify (-1.) _A in 
+  let _A',b,c = lower_corner _A' b c in
+  let _A' = Array.append [|b|] (transpose _A') in
+  let _A' = Array.append [|(Array.append [|0.|] c)|] (transpose _A') in
+  (1--m,(m+1)--(m+n),_A',[||],[||],0.)
+
+let new_pivot (slp:slack_lp) l e = 
+  let _N, _B, _A, _, _, _ = slp in
+  let _N = List.filter ((!=) e) _N in
+  _A.(l).(l) <- 1. ; 
+  let _N = l::_N in
+  let _A' = extract _A _B _N in
+  let _r = extract [|_A.(l)|] [0] _N in
+  let _c = extract [|column e _A|] _B [0] in
+  let _r = magnify (1. /. _A.(l).(e)) _c in
+  _r,_A
+
 (* 
  * select takes a vector m and a list of indices into that matrix, l
  * and f, a function. Returns the f'est thing in the list along with its
  * index into the vector (if f is (<) f'est is smallest)
  *)
+
 let select m l f = 
   let (v,i) = List.fold_left (fun p i -> 
     let v',i' = p in if (f m.(i) v') then m.(i),i else p) 
@@ -35,7 +63,7 @@ let select m l f =
 
 (* run the pivot logic as in CLRS *)
 let pivot 
-    (* basic and _N must be a partition a list from 1..N *)
+    (* _B and _N must be a partition a list from 1..N *)
     (_N: int list)
     (_B: int list)
     (_A: float matrix) 
@@ -48,14 +76,12 @@ let pivot
     float vector * (* b *)
     float vector * (* c *)
     float = (* v *)
-  ps "starting\n" ;
   let d = (List.length _N) + (List.length _B) in
   let _A' = make d d 0. in
   let b' = Array.create d 0. in
   let c' = Array.create d 0. in
   let _N' = List.filter ((!=) e) _N in
   let _B' = List.filter ((!=) l) _B in
-  ps "checkpoint 1\n" ;
   let _ = 
     b'.(e) <- b.(l) /. _A.(l).(e) ; 
     List.iter (fun j -> _A'.(e).(j) <- _A.(l).(j) /. _A.(l).(e)) _N' ;
@@ -66,15 +92,11 @@ let pivot
         _N' ;
       _A'.(i).(l) <- -.(_A.(i).(e) *. _A'.(e).(l))
     ) _B' in
-  ps "checkpoint 1\n" ;
   let v' = v +. c.(e) *. b'.(e) in
   let _ = List.iter (fun j -> c'.(j) <- c.(j) -. c.(e) *. _A'.(e).(j)) _N' in
   let _N' = List.sort (compare) (l :: _N') in
   let _B' = List.sort (compare) (e :: _B') in
   let _ = c'.(l) <- (-. ( c.(e) *. _A'.(e).(l) )) in
-(*  ps "A\n" ; print_matrix _A' ;
-  ps "b\n" ; plst _B' ;
-  ps "c\n" ; plst _N' ; *)
   (_N', _B', _A', b', c', v')
 
 let initialize_simplex (_A:float matrix) (b:float vector) (c:float vector) :
@@ -84,40 +106,18 @@ let initialize_simplex (_A:float matrix) (b:float vector) (c:float vector) :
     float array * (* b *)
     float array * (* c *)
     float = (* v *)
-  let _A',b',c' = lower_corner _A b c in
   let m,n = dim _A in
+  let _A = magnify (-1.) _A in
+  let _A',b',c' = lower_corner _A b c in
   let _N,_B = 0--(n-1),n--(n+m-1) in
   (_N,_B,_A',b',c',0.)
 
-let rec iterate_pivot (
-    (_N: int list),
-    (_B: int list),
-    (a: float matrix),
-    (b:float vector),
-    (c:float vector),
-    (v:float)) : int list (* _B *) * float array (* b *) = 
-
-  print_matrix a ;
-  print_vector b ;
-  print_vector c ;
-  let lst = List.filter (fun j ->  c.(j) > 0.) _N in
-  match lst with
-      [] -> _B,b (* done, return results *)
-    | _ -> (* not done so find l and do funny recursive call *)
-      let e = List.hd lst in
-      let delta = Array.mapi (fun i x -> 
-        let y = x /. a.(i).(e) in
-        if y < 0. then infinity else y) b in
-      let (d,l) = select delta _B (<) in
-      if d = infinity 
-      then 
-        let _ = pff delta in let a' = transpose a in
-        let _ = pf "e = %d, a(e) = " e; pff a'.(e) in [],[||]
-      (* raise (Failure "Program is unbounded") *)
-      else iterate_pivot (pivot _N _B a b c v e l)
-
 let positize v = Array.map (fun x -> if x <= 0. then infinity else x) v
 
+(*
+ * in pivot the leaving variable is the one that will go from basic to 
+ * non basic.
+ *)
 let leaving _A _B b e = 
   let delta = positize (divv b (transpose _A).(e)) in
   select delta _B (<)
@@ -147,6 +147,10 @@ let rec tightest _N _A b c mo =
                None -> Some m | Some m' -> Some (max m' m) in
            tightest t _A b c mo'
 
+(* 
+ * determine entering and leaving indices and execute pivot on that
+ * until c(_N) has no more positive values
+ *)
 let rec iterate_pivot (_N,_B,_A,b,c,v) = 
   match entering _N c with
       None -> b,v
@@ -174,21 +178,26 @@ let simplex (_A:float matrix) (b:float vector) (c:float vector) =
 
 let _A = create (3,3) [1.; 1.; 3.; 
                       2.; 2.; 5.; 
-                      4.; 1.; 2.; ] in
+                      4.; 1.; 2.; ] 
+let b = [| 30.; 24.; 36. |] 
+let c = [| 3.; 1.; 2. |] 
 
-let b = [| 30.; 24.; 36. |] in
-
-let c = [| 3.; 1.; 2. |] in
-
+;;in
 simplex _A b c 
 ;;
-let _A = create (3,3) [-1.; -1.; 1.; 
-                      1.; 1.; -1.; 
-                      -1.; 2.; -2.; ] in
 
+(* doesn't work *)
+
+let _A = create (3,3) [1.; 1.; -1.; 
+                      -1.; -1.; 1.; 
+                      1.; -2.; 2.; ] in 
 let b = [| 7.; -7.; 4. |] in
-
 let c = [| 2.; -3.; 3. |] in
+simplex _A b c 
+;;
 
+let _A = create (2,3) [-2.; -7.5; -3.; -20.; -5.; -10.] in
+let c = [|-1.; -1.; -1.|] in
+let b = [|10000.; 30000.|] in
 simplex _A b c 
 ;;
