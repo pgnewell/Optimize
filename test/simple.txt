@@ -1,0 +1,18 @@
+Instrument: CAT
+-RoR 3
+-Risk 2
+-ExpRE 5
+-Price 4
+
+Instrument: C
+-RoR 6
+-Risk 1
+-ExpRE -2
+-Price 2
+
+Objective: > RoR
+
+Constraints: Price<8 Risk<10 ExpRE<-2
+
+
+

@@ -16,24 +16,27 @@ let (--) n m =
     then lst 
     else (rrange (m' - 1) (m'::lst)) in
   rrange m []
-
+(* element wise add *)
 let addv (v1:'a vector) (v2:'a vector) : 'a vector = 
   Array.mapi (fun i a -> v1.(i) +. a) v2
-
+(* element-wise subtract*)
+let subtractv (v1:'a vector) (v2:'a vector) : 'a vector = 
+  Array.mapi (fun i a -> v1.(i) -. a) v2
+(* element-wise product *)
 let prodv v1 v2 filter = Array.mapi (fun i a -> v1.(i) *. a) v2
-
+(* scalar product *)
 let dot_prodv v1 v2 = Array.fold_left (+.)
   0. (Array.mapi (fun i a -> v1.(i) *. a) v2)
-
+(* sum the elements of the vector *)
 let sumv v = Array.fold_right (+.) v 0.
-
+(* element-wise divide *)
 let divv v1 v2 = Array.mapi (fun i a -> v1.(i) /. a) v2
-
+(* element-wise add *)
 let add m1 m2 = Array.mapi (fun i a -> addv m1.(i) a) m2
-
+(*scalar multiply a vector *)
 let magnifyv x v = Array.map (( *. ) x) v
 (*
- * fold left for f and filter i return (i * value) option
+ * fold array a left for fun f and filter i return (i * value) option
  *)
 let foldl_i f a filter = 
     let l = List.combine (0--((Array.length a)-1)) (Array.to_list a) in
@@ -51,14 +54,14 @@ let min_i a filter = foldl_i (<) a filter
 let transpose m = 
   Array.mapi (fun j e -> 
     Array.mapi (fun i v -> v.(j)) m
-  ) m.(1)
+  ) m.(0)
     
 let product m1 m2 = 
   let t = transpose m2 in
   Array.map (fun v1 -> 
     Array.map (fun v2 -> dot_prodv v1 v2) t
   ) m1
-
+(* scalar multiply *)
 let magnify x m = 
   Array.map (fun v -> 
     Array.map (fun e -> e *. x) v
@@ -90,7 +93,13 @@ let rec create ((m:int),(n:int)) (lst:'a list) : 'a matrix =
 let make (m:int) (n:int) (x:'a) : 'a matrix = Array.make_matrix m n x
 
 (* return the dimensions of the matrix *)
-let dim _M = (Array.length _M, Array.length _M.(0))
+let dim _M = 
+  let v = Array.length _M in
+  if v > 0 
+  then 
+    let h = Array.length _M.(0) in 
+    if h = 0 then 0,0 (*accomodates a double enclosed empty array *) else v,h
+  else 0,0
 
 (* take matrix A and vectors b c (according to input) and make them usable 
  * by the algorithm. This means making an m+n square martix and locating the
@@ -111,6 +120,14 @@ let lower_corner _X b c =
   let _M = Array.make n stubmn in
   let _M' = Array.map (fun a -> Array.append a stubm) _X in
   (Array.append _M _M'),b',c'
+
+let lower_corner1 _X = 
+  let m,n = dim _X in
+  let _S = Array.make_matrix m m 0. in
+  let _T = Array.append (transpose _X) _S in
+  let _H = Array.make_matrix n (m+n) 0. in
+  Array.append _H (transpose _T)
+
 (*
  * take a small matrix and place its values in the vertical and 
  * horizontal indices given
@@ -159,4 +176,8 @@ let test_row _M n result =
 
 let test_expand _M verl horl result = 
   assert((expand _M verl horl) = result)
+
+let test_transpose _M result = 
+  assert ((transpose _M) = result)
+
 

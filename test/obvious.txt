@@ -1,0 +1,23 @@
+Instrument: CAT
+-RoR 3.5
+-Risk 1
+-ExpRE 2
+-Price 25
+
+Instrument: C
+-RoR 4.1
+-Risk 1
+-ExpRE 2
+-Price 40
+
+Instrument: NG
+-RoR 20.0
+-Risk 1
+-ExpRE 1
+-Price 5
+
+Objective: > RoR
+
+Constraints: Price<50000000 Risk<10000 ExpRE<30000
+
+

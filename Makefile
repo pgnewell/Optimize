@@ -1,22 +1,33 @@
-LIB = matrix.ml reader.ml simplex.ml
-EXE = optimize.ml
 
-all: lib exe
+PROG = optimize
 
-lib: $(LIB)
-	ocamlc -o lib.cma -a Helpers.ml matrix.ml instrument.ml reader.ml 
-	ocamlc -c Helpers.ml
-	ocamlc -c matrix.ml
-	ocamlc -c reader.ml
-	ocamlc -c simplex.ml
-	ocamlc -c instrument.ml
+# Setup
 
-exe: $(EXE)
-	ocamlc -o optimize str.cma Helpers.ml matrix.ml simplex.ml instrument.ml reader.ml optimize.ml
-	ocamlc -o simplex str.cma Helpers.ml matrix.ml simplex.ml instrument.ml
+LIBS = \
+	str.cma 
 
-#	ocamlc str.cma matrix.cmo simplex.cmo instrument.cmo reader.cmo -o optimize optimize.ml
-#	ocamlc str.cma matrix.cmo instrument.cmo -o simplex simplex.ml
+CAMLC = ocamlc
+CAMLDOC = ocamldoc
+
+%.cmo: %.ml
+	$(CAMLC) $(CAMLFLAGS) -c $<
+
+# Source and Object files
+
+SOURCES = \
+	helpers.ml matrix.ml instrument.ml reader.ml simplex.ml 
+
+OBJECTS = $(SOURCES:.ml=.cmo)
+
+# Basic Program
+$(PROG): $(OBJECTS) $(PROG).cmo
+	$(CAMLC) $(CAMLFLAGS) $(LIBS) $(OBJECTS) $(PROG).cmo -o $(PROG)
+
+build_exe: $(PROG)
+
+test_simplex: $(OBJECTS) test.cmo 
+	$(CAMLC) $(CAMLFLAGS) $(LIBS) $(OBJECTS) -o test_simplex
 
 clean:
-	rm -f *.cmi *.cmo *.cma optimize
+	rm *.cmo *.cmi optimize test_simplex
+	
